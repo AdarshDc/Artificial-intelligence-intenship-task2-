@@ -1,0 +1,148 @@
+import math
+
+# Constants for players
+PLAYER_X = 'X'
+PLAYER_O = 'O'
+EMPTY = ' '
+
+
+# Function to print the game board
+def print_board(board):
+    for row in board:
+        print(" | ".join(row))
+        print("-" * 9)
+
+
+# Function to check if the game is over
+def is_game_over(board):
+    # Check rows, columns, and diagonals
+    for i in range(3):
+        if board[i][0] == board[i][1] == board[i][2] != EMPTY:
+            return True
+        if board[0][i] == board[1][i] == board[2][i] != EMPTY:
+            return True
+    if board[0][0] == board[1][1] == board[2][2] != EMPTY:
+        return True
+    if board[0][2] == board[1][1] == board[2][0] != EMPTY:
+        return True
+
+    # Check for a tie
+    if all(board[i][j] != EMPTY for i in range(3) for j in range(3)):
+        return True
+
+    return False
+
+
+# Function to evaluate the board state
+def evaluate_board(board):
+    # Check rows, columns, and diagonals
+    for i in range(3):
+        if board[i][0] == board[i][1] == board[i][2]:
+            if board[i][0] == PLAYER_X:
+                return 10
+            elif board[i][0] == PLAYER_O:
+                return -10
+        if board[0][i] == board[1][i] == board[2][i]:
+            if board[0][i] == PLAYER_X:
+                return 10
+            elif board[0][i] == PLAYER_O:
+                return -10
+    if board[0][0] == board[1][1] == board[2][2]:
+        if board[0][0] == PLAYER_X:
+            return 10
+        elif board[0][0] == PLAYER_O:
+            return -10
+    if board[0][2] == board[1][1] == board[2][0]:
+        if board[0][2] == PLAYER_X:
+            return 10
+        elif board[0][2] == PLAYER_O:
+            return -10
+    return 0
+
+
+# Minimax algorithm with Alpha-Beta Pruning
+def minimax(board, depth, is_maximizing, alpha, beta):
+    if is_game_over(board):
+        return evaluate_board(board)
+
+    if is_maximizing:
+        max_eval = -math.inf
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == EMPTY:
+                    board[i][j] = PLAYER_X
+                    eval = minimax(board, depth + 1, False, alpha, beta)
+                    board[i][j] = EMPTY
+                    max_eval = max(max_eval, eval)
+                    alpha = max(alpha, eval)
+                    if beta <= alpha:
+                        break
+        return max_eval
+    else:
+        min_eval = math.inf
+        for i in range(3):
+            for j in range(3):
+                if board[i][j] == EMPTY:
+                    board[i][j] = PLAYER_O
+                    eval = minimax(board, depth + 1, True, alpha, beta)
+                    board[i][j] = EMPTY
+                    min_eval = min(min_eval, eval)
+                    beta = min(beta, eval)
+                    if beta <= alpha:
+                        break
+        return min_eval
+
+
+# Find the best move for the AI player
+def find_best_move(board):
+    best_eval = -math.inf
+    best_move = (-1, -1)
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == EMPTY:
+                board[i][j] = PLAYER_X
+                eval = minimax(board, 0, False, -math.inf, math.inf)
+                board[i][j] = EMPTY
+                if eval > best_eval:
+                    best_eval = eval
+                    best_move = (i, j)
+    return best_move
+
+
+# Main game loop
+def play_game():
+    board = [[EMPTY] * 3 for _ in range(3)]
+    print("Welcome to Tic-Tac-Toe! You are O and the AI is X.")
+    print_board(board)
+
+    while not is_game_over(board):
+        # Human player's turn
+        row = int(input("Enter the row (0-2): "))
+        col = int(input("Enter the column (0-2): "))
+        if board[row][col] == EMPTY:
+            board[row][col] = PLAYER_O
+        else:
+            print("Cell already occupied. Try again.")
+            continue
+
+        print_board(board)
+
+        if is_game_over(board):
+            break
+
+        # AI player's turn
+        ai_row, ai_col = find_best_move(board)
+        board[ai_row][ai_col] = PLAYER_X
+        print("AI's move:")
+        print_board(board)
+
+    result = evaluate_board(board)
+    if result == 10:
+        print("AI wins!")
+    elif result == -10:
+        print("You win!")
+    else:
+        print("It's a tie!")
+
+
+play_game()
